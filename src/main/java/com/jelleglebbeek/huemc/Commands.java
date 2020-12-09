@@ -5,14 +5,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.*;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class Commands implements CommandExecutor, Listener {
 
-    private JavaPlugin pl;
+    private Main pl;
     ConversationFactory factory;
 
-    public Commands(JavaPlugin pl) {
+    public Commands(Main pl) {
         this.pl = pl;
         this.factory = new ConversationFactory(pl);
     }

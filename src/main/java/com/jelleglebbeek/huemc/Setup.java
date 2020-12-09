@@ -1,33 +1,75 @@
 package com.jelleglebbeek.huemc;
 
+import org.bukkit.Bukkit;
 import org.bukkit.conversations.*;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.logging.Level;
 
 public class Setup {
 
-    public Setup(JavaPlugin pl, Conversable conversable) {
-        ConversationFactory conversationFactory = new ConversationFactory(pl)
-                .withModality(true)
-                .withPrefix(new PluginNameConversationPrefix(pl)) //TODO create own prefix
-                .withFirstPrompt(new InfoPrompt())
-                .withEscapeSequence("stop")
-                .withLocalEcho(false)
-                .thatExcludesNonPlayersWithMessage("Only players can setup HueMC");
-        conversationFactory.buildConversation(conversable).begin();
+    private Main pl;
+
+    public Setup(Main pl, Conversable conversable) {
+        this.pl = pl;
+        Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+            ConversationFactory conversationFactory = new ConversationFactory(pl)
+                    .withModality(true)
+                    .withPrefix(new PluginNameConversationPrefix(pl)) //TODO create own prefix
+                    .withFirstPrompt(new InfoPrompt())
+                    .withEscapeSequence("stop")
+                    .withLocalEcho(false)
+                    .thatExcludesNonPlayersWithMessage("Only players can setup HueMC");
+            conversationFactory.buildConversation(conversable).begin();
+        });
         //TODO add bye bye message when player stops the setup.
     }
 
     private class InfoPrompt extends MessagePrompt {
         @Override
         protected Prompt getNextPrompt(ConversationContext conversationContext) {
-            return new EnterIPPrompt();
+            return new BridgePrompt();
         }
 
         @Override
         public String getPromptText(ConversationContext conversationContext) {
             return "Welcome to HueMC setup! To exit type 'stop'.";
+        }
+    }
+
+    private class BridgePrompt extends MessagePrompt {
+        private boolean noBridge = false;
+        private boolean oneBridge = false;
+
+        @Override
+        protected Prompt getNextPrompt(ConversationContext conversationContext) {
+            if(noBridge) {
+                return Prompt.END_OF_CONVERSATION;
+            } else {
+                if(oneBridge) {
+                    return new HasApiKeyPrompt();
+                } else {
+                    return new EnterIPPrompt();
+                }
+            }
+        }
+
+        @Override
+        public String getPromptText(ConversationContext conversationContext) {
+            conversationContext.getForWhom().sendRawMessage("Auto-detecting Hue Bridges...");
+            HashMap<String, String> bridges = HueAPI.discoverBridges();
+            if(bridges == null) {
+                noBridge = true;
+                return "No Hue Bridge detected in this network. Exiting setup...";
+            } else {
+                oneBridge = bridges.size() == 1;
+                conversationContext.getForWhom().sendRawMessage(oneBridge ? "Detected Hue Bridge:" : "Detected Hue Bridges:");
+                for(String ip : bridges.keySet()) {
+                    conversationContext.getForWhom().sendRawMessage("- " + bridges.get(ip) + " IP: " + ip);
+                }
+                conversationContext.setSessionData("ip", bridges.keySet().toArray()[0]);
+                return "Hue Bridge detection finished";
+            }
         }
     }
 
@@ -66,8 +108,11 @@ public class Setup {
             if(input.equalsIgnoreCase("yes") || input.equalsIgnoreCase("true")) {
                 return new EnterApiKeyPrompt();
             } else {
-                //TODO start connect and ask user to press on the bridge button.
                 conversationContext.getForWhom().sendRawMessage("Press the button on your Hue Bridge to finish connecting.");
+                String ip = (String) conversationContext.getSessionData("ip");
+                Bukkit.getLogger().log(Level.INFO, ip);
+                pl.hue = new HueAPI(ip);
+                Bukkit.getScheduler().runTaskAsynchronously(pl, () -> pl.hue.connect(conversationContext.getForWhom(), pl.cfg));
                 return Prompt.END_OF_CONVERSATION;
             }
         }
@@ -94,6 +139,9 @@ public class Setup {
             //TODO Start connection with API key
             conversationContext.setSessionData("apiKey", input);
             conversationContext.getForWhom().sendRawMessage("Connecting to your Hue Bridge via API key.");
+            String ip = (String) conversationContext.getSessionData("ip");
+            pl.hue = new HueAPI(ip, input);
+            Bukkit.getScheduler().runTaskAsynchronously(pl, () -> pl.hue.connect(conversationContext.getForWhom(), pl.cfg));
             return Prompt.END_OF_CONVERSATION;
         }
 
