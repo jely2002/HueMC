@@ -2,7 +2,6 @@ package com.jelleglebbeek.huemc;
 
 import io.github.zeroone3010.yahueapi.*;
 import io.github.zeroone3010.yahueapi.discovery.*;
-import org.bukkit.Bukkit;
 import org.bukkit.conversations.Conversable;
 
 import java.util.ArrayList;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 
 public class HueAPI {
 
@@ -38,10 +36,12 @@ public class HueAPI {
             try {
                 key = apiKey.get();
             } catch (InterruptedException e) {
-                conv.sendRawMessage("An unknown interruption occured, failed to connect," + e.getMessage());
+                conv.sendRawMessage("An unknown interruption occured, failed to connect.");
+                conv.sendRawMessage(e.getMessage());
                 return;
             } catch (ExecutionException e) {
                 conv.sendRawMessage("The link button was not pressed in time.");
+                conv.sendRawMessage("HueMC could not connect to your bridge.");
                 return;
             }
             this.apiKey = key;
@@ -52,10 +52,32 @@ public class HueAPI {
         conv.sendRawMessage("HueMC is now connected to your bridge.");
     }
 
-    public void disable() {
-        if(this.hue != null) {
-            hue.
+    public ArrayList<String> getRooms() {
+        ArrayList<String> roomNames = new ArrayList<>();
+        for (Room room : hue.getRooms()) {
+            roomNames.add(room.getName());
         }
+        return roomNames;
+    }
+
+    public ArrayList<String> getZones() {
+        ArrayList<String> zoneNames = new ArrayList<>();
+        for (Room room : hue.getZones()) {
+            zoneNames.add(room.getName());
+        }
+        return zoneNames;
+    }
+
+    public ArrayList<String> getLights(String name, boolean isZone) {
+        ArrayList<String> lightNames = new ArrayList<>();
+        for(Light light : isZone ? hue.getZoneByName(name).get().getLights() : hue.getRoomByName(name).get().getLights()) {
+            lightNames.add(light.getName());
+        }
+        return lightNames;
+    }
+
+    public void disable() {
+        //Empty method stub
     }
 
     public static HashMap<String, String> discoverBridges() {
