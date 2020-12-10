@@ -1,5 +1,7 @@
-package com.jelleglebbeek.huemc;
+package com.jelleglebbeek.huemc.prompts;
 
+import com.jelleglebbeek.huemc.HueAPI;
+import com.jelleglebbeek.huemc.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.conversations.*;
 
@@ -15,7 +17,7 @@ public class Setup {
         Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
             ConversationFactory conversationFactory = new ConversationFactory(pl)
                     .withModality(true)
-                    .withPrefix(new PluginNameConversationPrefix(pl)) //TODO create own prefix
+                    .withPrefix(new StandardPrefix())
                     .withFirstPrompt(new InfoPrompt())
                     .withEscapeSequence("stop")
                     .withLocalEcho(false)
@@ -33,6 +35,7 @@ public class Setup {
 
         @Override
         public String getPromptText(ConversationContext conversationContext) {
+            conversationContext.setSessionData("prefix", "HueMC Setup");
             return "Welcome to HueMC setup! To exit type 'stop'.";
         }
     }
