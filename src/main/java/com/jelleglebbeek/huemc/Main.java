@@ -15,6 +15,7 @@ public class Main extends JavaPlugin {
         this.cmd = new Commands(this);
         getCommand("huemc").setExecutor(cmd);
         getCommand("hmc").setExecutor(cmd);
+        this.getServer().getPluginManager().registerEvents(cmd, this);
         if(!cfg.get().getString("api-key").equalsIgnoreCase("") && !cfg.get().getString("hue-bridge-ip").equalsIgnoreCase("")) {
             this.hue = new HueAPI(cfg.get().getString("hue-bridge-ip"), cfg.get().getString("api-key"));
             Bukkit.getScheduler().runTaskAsynchronously(this, () -> this.hue.connect(Bukkit.getConsoleSender(), this.cfg));
