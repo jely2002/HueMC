@@ -15,7 +15,7 @@ A redstone signal strength of 0 means a brightness of 0, where a strength of 15 
 
 ## Colors
 There are a variety of colors that can be added to an input. The color of an input can be changed by placing stained glass underneath it.
-When there is no glass underneath the light will be white, this behavior can be changed in the config. So when there is no block underneath it won't change any colors.
+When there is no glass underneath the light will use the last known color, this behavior can be changed in the config. So when there is no glass block underneath it will change to white.
 
 ## What can I link an input with?
 An input can be linked with a whole zone or room. As well as just one light in a zone or room.
