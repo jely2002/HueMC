@@ -3,7 +3,7 @@ A minecraft plugin to control Philips Hue lights in Minecraft.
 The plugin works by creating a so called **input**. An input is a redstone lamp that of course can be powered by in game redstone.
 There are as of now 2 different types of inputs: switch and dimmer.
 
-### **Important: This plugin will only work if the server is located inside the same network as the Hue Bridge.**
+#### **Important: This plugin will only work if the minecraft server is located inside the same network as the Hue Bridge.**
 
 ## Switch input
 This input acts as a normal light switch, if it receives redstone power it will turn on the linked Hue light(s).
