@@ -1,7 +1,10 @@
 package com.jelleglebbeek.huemc.prompts;
 
+import com.jelleglebbeek.huemc.InputBlock;
+import com.jelleglebbeek.huemc.InputType;
 import com.jelleglebbeek.huemc.Main;
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
 import org.bukkit.conversations.*;
 
 import java.util.ArrayList;
@@ -9,8 +12,10 @@ import java.util.ArrayList;
 public class AddInput {
 
     private Main pl;
+    private Block block;
 
-    public AddInput(Main pl, Conversable conversable) {
+    public AddInput(Main pl, Conversable conversable, Block block) {
+        this.block = block;
         this.pl = pl;
         Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
             ConversationFactory conversationFactory = new ConversationFactory(pl)
@@ -122,15 +127,23 @@ public class AddInput {
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext conversationContext, String s) {
+            for(String area : availableAreas) {
+                if(area.equalsIgnoreCase(s)) {
+                    conversationContext.setSessionData("area", area);
+                }
+            }
             if((boolean) conversationContext.getSessionData("whole")) {
-                //TODO attempt to create the input block with this whole area
+                InputBlock newInput = new InputBlock(
+                        null,
+                        block.getLocation(),
+                        InputType.valueOf(((String) conversationContext.getSessionData("type")).toUpperCase()),
+                        (String) conversationContext.getSessionData("area"),
+                        conversationContext.getSessionData("link").equals("zone")
+                        );
+                pl.inputBlocks.add(newInput);
+                pl.cfg.saveAllInputBlocks();
                 return Prompt.END_OF_CONVERSATION;
             } else {
-                for(String area : availableAreas) {
-                    if(area.equalsIgnoreCase(s)) {
-                        conversationContext.setSessionData("area", area);
-                    }
-                }
                 return new SelectLightPrompt();
             }
         }
@@ -188,11 +201,20 @@ public class AddInput {
 
         @Override
         protected Prompt acceptValidatedInput(ConversationContext conversationContext, String s) {
-            //TODO Create the input with the specified light.
             String lightName;
             for(String light : availableLights) {
                 if(light.equalsIgnoreCase(s)) {
                     lightName = light;
+                    InputBlock newInput = new InputBlock(
+                            null,
+                            block.getLocation(),
+                            InputType.valueOf(((String) conversationContext.getSessionData("type")).toUpperCase()),
+                            (String) conversationContext.getSessionData("area"),
+                            conversationContext.getSessionData("link").equals("zone"),
+                            lightName
+                    );
+                    pl.inputBlocks.add(newInput);
+                    pl.cfg.saveAllInputBlocks();
                 }
             }
             return Prompt.END_OF_CONVERSATION;
@@ -206,11 +228,11 @@ public class AddInput {
         @Override
         public String getPromptText(ConversationContext conversationContext) {
             Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-                ArrayList<String> lightNames = pl.hue.getLights((String) conversationContext.getSessionData("area"), false);
+                ArrayList<String> lightNames = pl.hue.getLightNames((String) conversationContext.getSessionData("area"), conversationContext.getSessionData("link").equals("zone"));
                 availableLights = lightNames;
-                conversationContext.getForWhom().sendRawMessage(StandardPrefix.prefix() + "The following lights were found:");
+                conversationContext.getForWhom().sendRawMessage("The following lights were found:");
                 for(String lightName : lightNames) {
-                    conversationContext.getForWhom().sendRawMessage(StandardPrefix.prefix() + "- " + lightName);
+                    conversationContext.getForWhom().sendRawMessage("- " + lightName);
                 }
                 isDone = true;
             });

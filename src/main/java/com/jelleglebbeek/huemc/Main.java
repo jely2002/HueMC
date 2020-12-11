@@ -1,30 +1,48 @@
 package com.jelleglebbeek.huemc;
 
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
 
 public class Main extends JavaPlugin {
 
     public Config cfg;
     private Commands cmd;
-    public HueAPI hue;
+    public InputListener inputListener;
+    public HueController hue;
+    public ArrayList<InputBlock> inputBlocks = new ArrayList<>();
 
     @Override
     public void onEnable() {
+        ConfigurationSerialization.registerClass(InputBlock.class, "InputBlock");
         this.cfg = new Config(this);
         this.cmd = new Commands(this);
+        this.inputListener = new InputListener(this, hue);
+        //cfg.getData().getKeys(false)
         getCommand("huemc").setExecutor(cmd);
         getCommand("hmc").setExecutor(cmd);
         this.getServer().getPluginManager().registerEvents(cmd, this);
-        if(!cfg.get().getString("api-key").equalsIgnoreCase("") && !cfg.get().getString("hue-bridge-ip").equalsIgnoreCase("")) {
-            this.hue = new HueAPI(cfg.get().getString("hue-bridge-ip"), cfg.get().getString("api-key"));
-            Bukkit.getScheduler().runTaskAsynchronously(this, () -> this.hue.connect(Bukkit.getConsoleSender(), this.cfg));
-        }
+        this.getServer().getPluginManager().registerEvents(inputListener, this);
+        attemptBridgeConnection();
     }
 
     @Override
     public void onDisable() {
         cfg.disable();
         if(hue != null) hue.disable();
+    }
+
+    private void attemptBridgeConnection() {
+        if(!cfg.getConfig().getString("api-key").equalsIgnoreCase("") && !cfg.getConfig().getString("hue-bridge-ip").equalsIgnoreCase("")) {
+            hue = new HueController(cfg.getConfig().getString("hue-bridge-ip"), cfg.getConfig().getString("api-key"));
+            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                hue.connect(Bukkit.getConsoleSender(), cfg);
+                inputListener.updateHue(hue);
+                cfg.loadAllInputBlocks();
+                System.out.println(inputBlocks.size());
+            });
+        }
     }
 }
