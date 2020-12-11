@@ -126,7 +126,11 @@ public class InputBlock implements ConfigurationSerializable {
         result.put("areaName", this.areaName);
         result.put("lightName", this.lightName);
         result.put("isZone", this.isZone);
-        result.put("color", this.color);
+        if(this.color == null) {
+            result.put("color", null);
+        } else {
+            result.put("color", this.color.getRGB());
+        }
         result.put("uuid", this.uuid.toString());
         return result;
     }
@@ -136,14 +140,14 @@ public class InputBlock implements ConfigurationSerializable {
             if (args.get("color") == null) {
                 return new InputBlock((String) args.get("uuid"),(Location) args.get("location"), InputType.valueOf((String) args.get("inputType")), (String) args.get("areaName"), (boolean) args.get("isZone"));
             } else {
-                return new InputBlock((String) args.get("uuid"),(Location) args.get("location"), InputType.valueOf((String) args.get("inputType")), (String) args.get("areaName"), (boolean) args.get("isZone"), (Color) args.get("color"));
+                return new InputBlock((String) args.get("uuid"),(Location) args.get("location"), InputType.valueOf((String) args.get("inputType")), (String) args.get("areaName"), (boolean) args.get("isZone"), new Color((int) args.get("color")));
             }
         } else {
             if(args.get("color") == null) {
                 return new InputBlock((String) args.get("uuid"), (Location) args.get("location"), InputType.valueOf((String) args.get("inputType")), (String) args.get("areaName"), (boolean) args.get("isZone"), (String) args.get("lightName"));
 
             } else {
-                return new InputBlock((String) args.get("uuid"), (Location) args.get("location"), InputType.valueOf((String) args.get("inputType")), (String) args.get("areaName"), (boolean) args.get("isZone"), (String) args.get("lightName"), (Color) args.get("color"));
+                return new InputBlock((String) args.get("uuid"), (Location) args.get("location"), InputType.valueOf((String) args.get("inputType")), (String) args.get("areaName"), (boolean) args.get("isZone"), (String) args.get("lightName"), new Color((int) args.get("color")));
             }
         }
     }
