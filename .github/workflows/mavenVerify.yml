@@ -28,5 +28,5 @@ jobs:
     - name: Upload artifact to action
       uses: actions/upload-artifact@v2.2.1
       with:
-        name: 'HueMC-${{steps.pom-version.outputs.version}}'
+        name: HueMC-${{GITHUB_SHA}}
         path: staging
