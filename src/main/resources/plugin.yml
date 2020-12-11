@@ -4,6 +4,7 @@ description: Control Philips Hue lights from within Minecraft.
 author: Jelle Glebbeek
 website: https://github.com/jely2002/HueMC
 main: com.jelleglebbeek.huemc.Main
+api-version: 1.16
 
 commands:
   huemc:
