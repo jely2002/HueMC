@@ -5,6 +5,7 @@ import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 public class Main extends JavaPlugin {
 
@@ -20,7 +21,6 @@ public class Main extends JavaPlugin {
         this.cfg = new Config(this);
         this.cmd = new Commands(this);
         this.inputListener = new InputListener(this, hue);
-        //cfg.getData().getKeys(false)
         getCommand("huemc").setExecutor(cmd);
         getCommand("hmc").setExecutor(cmd);
         this.getServer().getPluginManager().registerEvents(cmd, this);
@@ -41,7 +41,7 @@ public class Main extends JavaPlugin {
                 hue.connect(Bukkit.getConsoleSender(), cfg);
                 inputListener.updateHue(hue);
                 cfg.loadAllInputBlocks();
-                System.out.println(inputBlocks.size());
+                Bukkit.getLogger().log(Level.INFO, "Loaded " + inputBlocks.size() + " inputs");
             });
         }
     }

@@ -47,7 +47,7 @@ public class HueController {
         this.hue = new Hue(ip, apiKey);
         cfg.getConfig().set("api-key", apiKey);
         cfg.getConfig().set("hue-bridge-ip", ip);
-        conv.sendRawMessage("HueMC is now connected to your bridge.");
+        conv.sendRawMessage("[HueMC] HueMC is now connected to your bridge.");
     }
 
     public ArrayList<String> getRooms() {

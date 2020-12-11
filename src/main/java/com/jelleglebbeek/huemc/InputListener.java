@@ -35,16 +35,11 @@ public class InputListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
-        System.out.println("0");
         if (hue == null) return;
-        System.out.println("1");
         if(!e.getBlock().getType().toString().contains("GLASS") || e.getBlock().getType().toString().contains("PANE")) return;
-        System.out.println("2");
         for(InputBlock inputBlock : pl.inputBlocks) {
             if(inputBlock.getLocation().equals(e.getBlock().getRelative(BlockFace.UP).getLocation())) {
-                System.out.println(3);
                 if(e.getBlock().getType().toString().contains("GLASS") && !e.getBlock().getType().toString().contains("PANE")) {
-                    System.out.println("Jackpot");
                     String dyeColor = e.getBlock().getType().toString().replace("_STAINED_GLASS", "");
                     Color RGBcolor = DyeColor.valueOf(dyeColor).getColor();
                     java.awt.Color HueColor = new java.awt.Color(RGBcolor.getRed(), RGBcolor.getGreen(), RGBcolor.getBlue());
@@ -57,14 +52,11 @@ public class InputListener implements Listener {
 
     @EventHandler
     public void onBlockDestroy(BlockBreakEvent e) {
-        System.out.println("0");
+        if(!pl.cfg.getConfig().getBoolean("white-light-when-no-glass")) return;
         if (hue == null) return;
-        System.out.println("1");
         if(!e.getBlock().getType().toString().contains("GLASS") || e.getBlock().getType().toString().contains("PANE")) return;
-        System.out.println("2");
         for(InputBlock inputBlock : pl.inputBlocks) {
             if(inputBlock.getLocation().equals(e.getBlock().getRelative(BlockFace.UP).getLocation())) {
-                System.out.println(3);
                 if(e.getBlock().getType().toString().contains("GLASS") && !e.getBlock().getType().toString().contains("PANE")) {
                     State lightState = State.builder().color(java.awt.Color.WHITE).keepCurrentState();
                     inputBlock.setColor(java.awt.Color.WHITE);
@@ -77,14 +69,21 @@ public class InputListener implements Listener {
     private void updateColor(InputBlock inputBlock) {
         Block colorBlock = inputBlock.getLocation().getBlock().getRelative(BlockFace.DOWN);
         if(colorBlock.getType().toString().contains("GLASS") && !colorBlock.getType().toString().contains("PANE")) {
-            System.out.println("Updated color");
             String dyeColor = colorBlock.getType().toString().replace("_STAINED_GLASS", "");
             Color RGBcolor = DyeColor.valueOf(dyeColor).getColor();
             java.awt.Color HueColor = new java.awt.Color(RGBcolor.getRed(), RGBcolor.getGreen(), RGBcolor.getBlue());
-            if(HueColor.getRGB() == inputBlock.getColor().getRGB()) return;
+            if(inputBlock.getColor() != null) {
+                if (HueColor.getRGB() == inputBlock.getColor().getRGB()) return;
+            }
             inputBlock.setColor(HueColor);
             State lightState = State.builder().color(HueColor).keepCurrentState();
             Bukkit.getScheduler().runTaskAsynchronously(pl, () -> hue.startAction(HueAction.STATE, hue.getLights(inputBlock), lightState));
+        } else {
+            if(pl.cfg.getConfig().getBoolean("white-light-when-no-glass")) {
+                State lightState = State.builder().color(java.awt.Color.WHITE).keepCurrentState();
+                inputBlock.setColor(java.awt.Color.WHITE);
+                Bukkit.getScheduler().runTaskAsynchronously(pl, () -> hue.startAction(HueAction.STATE, hue.getLights(inputBlock), lightState));
+            }
         }
     }
 
@@ -102,9 +101,6 @@ public class InputListener implements Listener {
                             if (block.getRelative(blockface).getBlockData() instanceof AnaloguePowerable) {
                                 powerableBlock = block.getRelative(blockface);
                                 powerable = (AnaloguePowerable) powerableBlock.getBlockData();
-                                System.out.println("Got powerable");
-                                System.out.println(powerable.getPower());
-                                System.out.println(block.getRelative(blockface).getLocation());
                                 break;
                             }
                         }
@@ -120,7 +116,6 @@ public class InputListener implements Listener {
                         } else {
                             dimmerCombination.putIfAbsent(powerableBlock, inputBlock);
                         }
-                        System.out.println(brightness);
                         Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
                             hue.startAction(HueAction.BRIGHTNESS, hue.getLights(inputBlock), brightness);
                             updateColor(inputBlock);
@@ -130,14 +125,11 @@ public class InputListener implements Listener {
 
                     } else if (inputBlock.getType() == InputType.SWITCH) {
                         if (e.getNewCurrent() > 0 && e.getOldCurrent() == 0) {
-                            System.out.println("Switch on, current: " + e.getNewCurrent());
-                            System.out.println(e.getBlock().getLocation());
                             Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
                                 hue.startAction(HueAction.TURN_ON, hue.getLights(inputBlock), null);
                                 updateColor(inputBlock);
                             });
                         } else if (e.getNewCurrent() == 0 && e.getOldCurrent() > 0) {
-                            System.out.println("Switch off, current: " + e.getNewCurrent());
                             Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
                                 hue.startAction(HueAction.TURN_OFF, hue.getLights(inputBlock), null);
                                 updateColor(inputBlock);
@@ -152,7 +144,6 @@ public class InputListener implements Listener {
             if(dimmerCombination.containsKey(e.getBlock())) {
                 powerlineChange = true;
                 Bukkit.getScheduler().runTaskLater(pl, () -> {
-                    System.out.println("powerline change");
                     InputBlock inputBlock = dimmerCombination.get(e.getBlock());
                     AnaloguePowerable powerable = (AnaloguePowerable) e.getBlock().getBlockData();
                     int brightness = (int) Math.round((double) powerable.getPower() / 15d * 100d);
