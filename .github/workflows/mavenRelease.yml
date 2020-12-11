@@ -3,7 +3,7 @@ name: Build with Maven & release
 on:
   push:
     tags:
-    - 'v*.*.*'
+      - 'v*
 
 jobs:
   build:
