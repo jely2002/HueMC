@@ -18,18 +18,14 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Get maven version
-      uses: Deep-Symmetry/github-version-action@v1.1
-      with:
-        mvn-var-name: VERSION
+    - name: Get current pom version
+      uses: CptMokoena/maven-get-version-action@1.0.3
     - name: Build with Maven
       run: mvn -B package --file pom.xml
     - name: Copy files to staging directory
       run: mkdir staging && cp target/*.jar staging
     - name: Upload artifact to action
-      uses: actions/upload-artifact@v1.0.0
-      env:
-        artifactprefix: 'GM4'
+      uses: actions/upload-artifact@v2.2.1
       with:
-        name: '${{ env.artifactprefix }}-${{ env.VERSION }}'
+        name: 'HueMC-${{steps.pom-version.outputs.version}}'
         path: staging
