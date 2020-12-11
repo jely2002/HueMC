@@ -3,13 +3,11 @@ name: Build with Maven & release
 on:
   push:
     tags:
-      - 'v*
+      - '*'
 
 jobs:
-  build:
-
+  publish:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
