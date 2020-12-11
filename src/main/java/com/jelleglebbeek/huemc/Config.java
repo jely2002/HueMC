@@ -22,6 +22,7 @@ public class Config {
         this.pl = pl;
         cfg.addDefault("hue-bridge-ip", "");
         cfg.addDefault("api-key", "");
+        cfg.addDefault("white-light-when-no-glass", false);
         cfg.options().copyDefaults(true);
         pl.saveConfig();
 
