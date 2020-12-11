@@ -1,6 +1,6 @@
 package com.jelleglebbeek.huemc.prompts;
 
-import com.jelleglebbeek.huemc.HueAPI;
+import com.jelleglebbeek.huemc.HueController;
 import com.jelleglebbeek.huemc.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.conversations.*;
@@ -60,7 +60,7 @@ public class Setup {
         @Override
         public String getPromptText(ConversationContext conversationContext) {
             conversationContext.getForWhom().sendRawMessage("Auto-detecting Hue Bridges...");
-            HashMap<String, String> bridges = HueAPI.discoverBridges();
+            HashMap<String, String> bridges = HueController.discoverBridges();
             if(bridges == null) {
                 noBridge = true;
                 return "No Hue Bridge detected in this network. Exiting setup...";
@@ -114,8 +114,11 @@ public class Setup {
                 conversationContext.getForWhom().sendRawMessage("Press the button on your Hue Bridge to finish connecting.");
                 String ip = (String) conversationContext.getSessionData("ip");
                 Bukkit.getLogger().log(Level.INFO, ip);
-                pl.hue = new HueAPI(ip);
-                Bukkit.getScheduler().runTaskAsynchronously(pl, () -> pl.hue.connect(conversationContext.getForWhom(), pl.cfg));
+                pl.hue = new HueController(ip);
+                Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+                    pl.hue.connect(conversationContext.getForWhom(), pl.cfg);
+                    pl.inputListener.updateHue(pl.hue);
+                });
                 return Prompt.END_OF_CONVERSATION;
             }
         }
@@ -143,8 +146,11 @@ public class Setup {
             conversationContext.setSessionData("apiKey", input);
             conversationContext.getForWhom().sendRawMessage("Connecting to your Hue Bridge via API key.");
             String ip = (String) conversationContext.getSessionData("ip");
-            pl.hue = new HueAPI(ip, input);
-            Bukkit.getScheduler().runTaskAsynchronously(pl, () -> pl.hue.connect(conversationContext.getForWhom(), pl.cfg));
+            pl.hue = new HueController(ip, input);
+            Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+                pl.hue.connect(conversationContext.getForWhom(), pl.cfg);
+                pl.inputListener.updateHue(pl.hue);
+            });
             return Prompt.END_OF_CONVERSATION;
         }
 
