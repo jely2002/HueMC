@@ -1,9 +1,8 @@
-name: Build with Maven & release
+name: Build with Maven & add to release
 
 on:
-  push:
-    tags:
-      - '*'
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -16,16 +15,6 @@ jobs:
         java-version: 1.8
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: Create a Release
-      id: create_release
-      uses: actions/create-release@v1.1.4
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: v${{ github.ref }}
-        body: For changelog see commits.
-        draft: true
     - name: Upload release binaries
       uses: alexellis/upload-assets@0.2.2
       env:
